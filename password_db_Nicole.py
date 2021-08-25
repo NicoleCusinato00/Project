@@ -9,35 +9,14 @@ import argparse
 
 
 # add a username
-# python password_db.py -a pippo -p pippopwd -r medico
+# python password_db_Nicole.py -a pippo -p pippopwd -r medico
 
 # check if it exists and its balance
-# python bad_password_db.py -c pippo -p pippopwd -r medico
+# python bad_password_db.py -c pippo -p pippopwd
 # python bad_password_db.py -c pippo -p differentpwd  # will not work!
 
-
-conn = None
-cursor = None
-
-
-def open_and_create():
-    global conn
-    global cursor
-    conn = sqlite3.connect('example-pwd.db')
+with sqlite3.connect("Pass.db")as conn:
     cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT * FROM user")
-    except sqlite3.OperationalError:
-        # Create user and wallet table
-        cursor.execute('''CREATE TABLE user
-                     (username TEXT, password TEXT, role TEXT,
-                      PRIMARY KEY (username))''')
-        cursor.execute('''CREATE TABLE wallet
-                     (username TEXT, balance INTEGER,
-                      PRIMARY KEY (username),
-                      FOREIGN KEY (username)
-                        REFERENCES user(username))''')
-
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -63,13 +42,13 @@ def save_new_username_correct(username, password, role):
 
     # prepared statements to avoid sql injection
     cursor.execute("INSERT OR REPLACE INTO user VALUES (?,?,?)",
-                   (username, digest))
+                   (username, digest, role))
     cursor.execute("INSERT OR REPLACE INTO wallet VALUES (?,?,?)",
-                   (username, 10))
+                   (username, 10, role))
     conn.commit()
 
 
-def check_for_username_correct(username, password, role):
+def check_for_username_correct(username, password):
     global conn
     global cursor
 
@@ -103,7 +82,6 @@ def print_all_users():
 
     
 args = parse_args()
-open_and_create()
 
 if args.a and args.p:
     save_new_username_correct(args.a, args.p, args.r)
